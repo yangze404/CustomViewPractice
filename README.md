@@ -1,0 +1,2 @@
+# CustomViewPractice
+模仿IOS的点击删除图标，学习自定义控件以及View/ViewGroup的事件分发与拦截
