@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">CustomLinearLayout</string>
+    <string name="reset">重置</string>
+    <string name="aLiPay">支付宝</string>
+    <string name="weChat">微信</string>
+    <string name="weiBo">微博</string>
+    <string name="QQ">QQ</string>
+</resources>

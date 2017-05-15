@@ -2,6 +2,7 @@
 <LinearLayout
 
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:yz="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -18,6 +19,9 @@
 
 
     <com.example.joy.customlinearlayout.CustomButton
+        yz:customText="@string/aLiPay"
+        yz:customTextSize="@dimen/aLiPaySize"
+        yz:customIcon="@drawable/custom_ic_alipay_50px"
         android:background="@color/colorAccent"
         android:layout_margin="20dp"
         android:clickable="true"
@@ -25,18 +29,30 @@
         android:layout_height="80dp"   />
 
     <com.example.joy.customlinearlayout.CustomButton
+
+        android:id="@+id/weChat"
+        yz:customText="@string/weChat"
+        yz:customTextSize="@dimen/aLiPaySize"
+        yz:customIcon="@drawable/custom_ic_alipay_50px"
         android:background="@color/colorPrimaryDark"
         android:layout_margin="20dp"
         android:clickable="true"
         android:layout_width="80dp"
         android:layout_height="80dp"   />
     <com.example.joy.customlinearlayout.CustomButton
-        android:background="#000"
+        yz:customText="@string/weiBo"
+        yz:customTextSize="@dimen/aLiPaySize"
+        yz:customIcon="@drawable/custom_ic_alipay_50px"
+        android:background="#ff0"
         android:layout_margin="20dp"
         android:clickable="true"
         android:layout_width="80dp"
         android:layout_height="80dp"   />
+
         <com.example.joy.customlinearlayout.CustomButton
+            yz:customText="@string/QQ"
+            yz:customTextSize="@dimen/aLiPaySize"
+            yz:customIcon="@drawable/custom_ic_alipay_50px"
             android:background="#550088"
             android:layout_margin="20dp"
             android:clickable="true"

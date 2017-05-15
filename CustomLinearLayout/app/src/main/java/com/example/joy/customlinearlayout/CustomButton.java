@@ -2,16 +2,20 @@ package com.example.joy.customlinearlayout;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup.MarginLayoutParams;
 import com.example.joy.customlinearlayout.data.Coordinates;
+import com.example.joy.customlinearlayout.model.DrawableToBitmap;
 
 
 /**
@@ -20,7 +24,11 @@ import com.example.joy.customlinearlayout.data.Coordinates;
 
 public class CustomButton extends View {
 
-    private String TEXT_NAME = "支付宝";
+    //图标名称
+    private String mTextName ;
+
+    //图标名称尺寸
+    private  int  mTextSize ;
 
     // 定义画笔
     private Paint mPaint;
@@ -40,11 +48,12 @@ public class CustomButton extends View {
     private int mBmpHeight = 0;
 
     //删除图标是否可见
-    private boolean isVisible = false;
+    private boolean mIsVisible = false;
 
     private Rect mSrcRect, mDestRect, mDeleteSrcRect, mDeleteDestRect, mBounds;
 
-    public int textWidth, mLeft, mTop;
+    //文字的宽度
+    private int mTextWidth;
 
     //图标绘制的坐标
     private Coordinates mCoordinates=new Coordinates() ;
@@ -53,22 +62,24 @@ public class CustomButton extends View {
     private Coordinates mDeleteCoordinates=new Coordinates() ;
 
 
-    public CustomButton(Context context) {
-        super(context);
-        initView();
+    //整个自定义的宽高
+    private  int mWidth,mHeight;
 
-    }
+    private Resources mResources=getResources();
 
     public CustomButton(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        initView();
+        initView(context,attrs);
+//        Log.e("yang","CustomButton");
+
+
 
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
+        Log.e("yang","onMeasure");
         mDeleteHeight = mDeleteBitmap.getHeight();
         mDeleteWidth = mDeleteBitmap.getWidth();
 
@@ -76,34 +87,25 @@ public class CustomButton extends View {
         mBmpHeight = mBitmap.getHeight();
 
         // 获取文字的宽和高
-        mPaint.setTextSize(20);
-        mPaint.getTextBounds(TEXT_NAME, 0, TEXT_NAME.length(), mBounds);
+        mPaint.setTextSize(mTextSize);
+        mPaint.getTextBounds(mTextName, 0, mTextName.length(), mBounds);
 
-        textWidth = mBounds.width();
-
-        // 计算左边位置
-        mLeft = (getWidth() - mBmpWidth) / 2;
-
-        // 计算上边位置
-        mTop = (getHeight() - mBmpHeight) / 2;
-
-        //  MeasureSpec.EXACTLY：父视图希望子视图的大小应该是specSize中指定的。
-        //  MeasureSpec.AT_MOST：子视图的大小最多是specSize中指定的值，也就是说不建议子视图的大小超过specSize中给定的值。
-        //  MeasureSpec.UNSPECIFIED：我们可以随意指定视图的大小。
-
-        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+        mTextWidth = mBounds.width();
 
 
-        setMeasuredDimension(widthSize, heightSize);
+         mWidth = MeasureSpec.getSize(widthMeasureSpec);
+         mHeight= MeasureSpec.getSize(heightMeasureSpec);
+
+
+        setMeasuredDimension(mWidth, mHeight+mDeleteHeight);
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-
+        Log.e("yang","onLayout");
         mSrcRect.set(0, 0, mBmpWidth, mBmpHeight); //代表要绘制的bitmap 区域
-        mDestRect.set(0, mDeleteHeight, mBmpWidth, mBmpHeight + mDeleteHeight); //代表的是要将bitmap 绘制在屏幕的什么地方
+        mDestRect.set(mWidth/2-mBmpWidth/2, mDeleteHeight, mWidth/2+mBmpWidth/2, mBmpHeight + mDeleteHeight); //代表的是要将bitmap 绘制在屏幕的什么地方
 
         mDeleteSrcRect.set(0, 0, mDeleteWidth, mDeleteHeight); //代表要绘制的bitmap 区域
         mDeleteDestRect.set(0, 0, mDeleteWidth, mDeleteHeight); //代表的是要将bitmap 绘制在屏幕的什么地方
@@ -127,27 +129,44 @@ public class CustomButton extends View {
 
         super.onDraw(canvas);
 
-
+        Log.e("yang","onDraw");
         //绘制图标
         canvas.drawBitmap(mBitmap, mSrcRect, mDestRect, mPaint);
 
         //根据是否删除模式选择动态显示删除图标
-        if (isVisible) {
+        if (mIsVisible) {
 
-            canvas.drawBitmap(mDeleteBitmap, mDeleteSrcRect, mDeleteDestRect, mPaint); //delete
+            canvas.drawBitmap(mDeleteBitmap, mDeleteSrcRect, mDeleteDestRect, mPaint);
         }
 
         //绘制图标下方的文字
-        canvas.drawText(TEXT_NAME, mBmpWidth / 2 - textWidth / 2, mBmpHeight + mBounds.height() + mDeleteHeight,
-                mPaint);
+//        canvas.drawText(mTextName, mBmpWidth / 2 - mTextWidth / 2, mBmpHeight + mBounds.height() + mDeleteHeight, mPaint);
 
+        canvas.drawText(mTextName,  mWidth / 2-mTextWidth/2,mBmpHeight + mDeleteHeight+mBounds.height(), mPaint);
+        Log.e("yz","mTextName.length=="+mTextName.length());
     }
 
 
     /**
-     * 初始化
+     * 初始化图片
      */
-    private void initView() {
+    private void initView(Context context,AttributeSet attrs) {
+
+        //获取自定义属性的值
+        TypedArray typedArray = context.obtainStyledAttributes(attrs,R.styleable.CustomButton);
+
+        //自定义属性获取名称
+        mTextName=typedArray.getString(R.styleable.CustomButton_customText);
+
+        //自定义属性获取名称大小
+        mTextSize=typedArray.getDimensionPixelSize(R.styleable.CustomButton_customTextSize,5);
+
+        //自定义属性获取图片
+        Drawable mDrawable=typedArray.getDrawable(R.styleable.CustomButton_customIcon);
+
+        typedArray.recycle();
+
+
         // 初始化画笔、Rect
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -161,23 +180,22 @@ public class CustomButton extends View {
 
         mDeleteSrcRect = new Rect();
 
+        //实现通过XML设置图片
+        mBitmap= DrawableToBitmap.drawableToBitmap(mDrawable);
 
-        Resources res = getResources();
+        mDeleteBitmap = BitmapFactory.decodeResource(mResources, R.drawable.custom_ic_delete);
 
-        mBitmap = BitmapFactory.decodeResource(res, R.drawable.custom_ic_alipay_50px);
-
-        mDeleteBitmap = BitmapFactory.decodeResource(res, R.drawable.custom_ic_delete);
     }
 
 
 
     public void longPress() {
-        isVisible = true;
+        mIsVisible = true;
         invalidate();
     }
 
     public void shortPress() {
-        isVisible = false;
+        mIsVisible = false;
         invalidate();
     }
 
@@ -194,8 +212,31 @@ public class CustomButton extends View {
         return mDeleteCoordinates ;
     }
 
+
     public Coordinates getCoordinates() {
        return  mCoordinates  ;
     }
 
+    //实现在代码中设置图标
+    public void  setIcon( int res_id){
+
+        mBitmap = BitmapFactory.decodeResource(mResources, res_id);
+        invalidate();
+    }
+
+    //实现在代码中设置图标
+    public void  setText( String textName){
+
+        mTextName=textName;
+        requestLayout();
+        invalidate();
+    }
+
+    //实现在代码中设置文字大小
+    public void  setTextSize( int size){
+
+        mTextSize=size;
+        requestLayout();
+        invalidate();
+    }
 }

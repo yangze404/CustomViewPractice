@@ -6,7 +6,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 import com.example.joy.customlinearlayout.model.DeleteModel;
 import com.example.joy.customlinearlayout.model.NormalModel;
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import java.util.List;
 public class CustomLinearLayout extends ViewGroup {
 
     //状态
-    private int state;
+    private int mState;
 
     //单击标识位
     public static final int STATE_PRESS_CLICK = 0X001;
@@ -28,38 +27,27 @@ public class CustomLinearLayout extends ViewGroup {
     //长按标识位
     public static final int STATE_PRESS_LONG_CLICK = 0x002;
 
-    //删除图标是否可见
-    public boolean isVisible = false;
-
     //删除模式
-    private boolean isDeleteMode = false;
+    private boolean mIsDeleteMode = false;
 
     //长按
-    private LongPressRunnable longPressRunnable = new LongPressRunnable();
+    private LongPressRunnable mLongPressRunnable = new LongPressRunnable();
 
     //View的个数
-    public int count = 0;
+    private int mCount = 0;
 
     //是否已经Layout
-    public boolean hasLayout=false ;
+    private boolean mHasLayout = false;
 
-    public NormalModel mNormalModel=new NormalModel();
 
-    public DeleteModel mDeleteModel=new DeleteModel();
+    private CustomLinearLayout mCustomLinearLayout;
 
-    public CustomLinearLayout mCustomLinearLayout ;
+    private int mDownX, mDownY;
 
-   public  int downX,downY,upX,upY;
-
-    public CustomLinearLayout(Context context) {
-
-        super(context);
-        mCustomLinearLayout=this;
-    }
 
     public CustomLinearLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mCustomLinearLayout=this;
+        mCustomLinearLayout = this;
     }
 
     @Override
@@ -70,12 +58,12 @@ public class CustomLinearLayout extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
         // 获得它的父容器为它设置的测量模式和大小
         int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
         int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
         int modeWidth = MeasureSpec.getMode(widthMeasureSpec);
         int modeHeight = MeasureSpec.getMode(heightMeasureSpec);
-
 
         // 如果是warp_content情况下，记录宽和高
         int width = 0;
@@ -92,17 +80,18 @@ public class CustomLinearLayout extends ViewGroup {
         // 遍历每个子元素
         for (int i = 0; i < cCount; i++) {
             CustomButton child = (CustomButton) getChildAt(i);
+
             // 测量每一个child的宽和高
             measureChild(child, widthMeasureSpec, heightMeasureSpec);
+
             // 得到child的lp
             MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
 
-
             // 当前子空间实际占据的宽度
             int childWidth = child.getMeasuredWidth() + lp.leftMargin + lp.rightMargin;
+
             // 当前子空间实际占据的高度
             int childHeight = child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin;
-
 
             //如果加入当前child，则超出最大宽度，则的到目前最大宽度给width，类加height 然后开启新行
             if (lineWidth + childWidth > sizeWidth) {
@@ -176,7 +165,7 @@ public class CustomLinearLayout extends ViewGroup {
                 lineViews = new ArrayList<>();
             }
 
-             //如果不需要换行，则累加
+            //如果不需要换行，则累加
 
             lineWidth += childWidth + lp.leftMargin + lp.rightMargin;
             lineHeight = Math.max(lineHeight, childHeight + lp.topMargin + lp.bottomMargin);
@@ -217,13 +206,13 @@ public class CustomLinearLayout extends ViewGroup {
                 child.layout(lc, tc, rc, bc);
 
 
-                 // 计算view的数量,记录每一个控件的位置,由于onLayout会调用两次，所以使用标识符time只添加一次View
-                if (!hasLayout) {
+                // 计算view的数量,记录每一个控件的位置,由于onLayout会调用两次，所以使用标识符time只添加一次View
+                if (!mHasLayout) {
                     //将每一个绘制图标的坐标，margin值保存
-                    child.saveCoordinates(lc, tc, rc, bc, count, lp);
+                    child.saveCoordinates(lc, tc, rc, bc, mCount, lp);
                     mViews.add(child);
-                    Log.e("yz", "count==" + count);
-                    count++;
+                    Log.e("yz", "count==" + mCount);
+                    mCount++;
 
                 }
                 left += child.getMeasuredWidth() + lp.rightMargin + lp.leftMargin;
@@ -232,8 +221,8 @@ public class CustomLinearLayout extends ViewGroup {
             left = 0;
             top += lineHeight;
         }
-        count = 0;
-        hasLayout=true;
+        mCount = 0;
+        mHasLayout = true;
 
     }
 
@@ -245,15 +234,15 @@ public class CustomLinearLayout extends ViewGroup {
             case MotionEvent.ACTION_DOWN:
 
                 //记录手指按下的坐标
-                downX= (int) event.getX();
-                downY= (int) event.getY();
+                mDownX = (int) event.getX();
+                mDownY = (int) event.getY();
 
-                if (isDeleteMode){
+                if (mIsDeleteMode) {
                     //删除模式
-                    mDeleteModel.deleteModel(downX,downY,getChildCount(),mViews,mCustomLinearLayout);
-                }else {
+                    DeleteModel.deleteModel(mDownX, mDownY, getChildCount(), mViews, mCustomLinearLayout);
+                } else {
                     //普通模式
-                    mNormalModel.normalModelActionDown(downX,downY,mViews,mCustomLinearLayout);
+                    NormalModel.actionDown(mDownX, mDownY, mViews, mCustomLinearLayout);
                 }
 
                 Log.e("yz", "GP_ACTION_DOWN");
@@ -268,15 +257,15 @@ public class CustomLinearLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
 
                 //记录手指抬起的坐标
-                upX= (int) event.getX();
-                upY= (int) event.getY();
+                int upX = (int) event.getX();
+                int upY = (int) event.getY();
 
                 //手指抬起放弃长按计时
-                removeCallbacks(longPressRunnable);
+                removeCallbacks(mLongPressRunnable);
 
-                if (state == STATE_PRESS_CLICK) {
+                if (mState == STATE_PRESS_CLICK) {
 
-                    mNormalModel.normalModelActionUp(downX,downY,upX,upY,getChildCount(),mViews);
+                    NormalModel.actionUp(mDownX, mDownY, upX, upY, getChildCount(), mViews, mCustomLinearLayout);
                 }
                 Log.e("yz", "GP_ACTION_UP");
                 break;
@@ -308,27 +297,66 @@ public class CustomLinearLayout extends ViewGroup {
 
     //取消删除模式
     public void cancelDeleteModel() {
-        isVisible = false;
-        isDeleteMode = false;
+
+        mIsDeleteMode = false;
         invalidate();
+        listener.onCustomCancelDeleteModel();
+
     }
 
     //进入删除模式
     public void enterDeleteModel() {
-        state = STATE_PRESS_LONG_CLICK;
-        Toast.makeText(MainActivity.mMainActivity, "长按，删除模式启动，点击Margin处会取消删除模式", Toast.LENGTH_SHORT).show();
+
+        mState = STATE_PRESS_LONG_CLICK;
+
         for (CustomButton customButton : mViews) {
             customButton.longPress();
         }
-        isVisible = true;
-        isDeleteMode = true;
+
+        mIsDeleteMode = true;
         invalidate();
+        listener.onCustomEnterDeleteModel();
+    }
+
+    //范围内点击
+    public void isClick() {
+        mState = STATE_PRESS_CLICK;
+        postDelayed(mLongPressRunnable, 1000);
+    }
+
+    public void deleteSucceed(int i) {
+        listener.onCustomDeleteSucceed(i);
+
     }
 
     //范围内单击
-    public void isClick() {
-        state = STATE_PRESS_CLICK;
-        postDelayed(longPressRunnable, 1000);
+    public void isSingleClick(int i) {
+        listener.onCustomSingleClick(i);
+
     }
+
+    //定义一个接口对象Listener
+    private OnCustomClickListener listener;
+
+
+    //获得接口对象的方法。
+    public void setOnCustomListener(OnCustomClickListener listener) {
+        this.listener = listener;
+
+
+    }
+
+    //定义一个接口
+    public interface OnCustomClickListener {
+
+        void onCustomSingleClick(int i);
+
+        void onCustomEnterDeleteModel();
+
+        void onCustomCancelDeleteModel();
+
+        void onCustomDeleteSucceed(int i);
+    }
+
 
 }
